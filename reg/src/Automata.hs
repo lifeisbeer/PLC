@@ -33,10 +33,12 @@ instance Show a => Show (Label a) where
 
 data Auto a q =
   MkAuto {
-    start  :: q,
-    trans  :: [(q, Label a, q)],
-    final  :: [q]
-  } deriving (Show)
+    states   :: Set q,
+    alphabet :: Set a,
+    start    :: q,
+    trans    :: Set (q, Label a, q),
+    final    :: Set q
+  } deriving (Show) -- work on new definition where alphabet, states and final are all sets, make sure everything still works
 
 
 -- | Given an automaton /m/ and a state /q/ of /m/, /next m q/ is
@@ -46,7 +48,7 @@ next :: (Ord q, Ord a) => Auto a q -> q -> Set (Label a, q)
 next m q =
     Set.fromList (map (\(_, a, p) -> (a, p)) relevant)
   where
-    relevant = filter (\(p, _, _) -> p == q) (trans m)
+    relevant = filter (\(p, _, _) -> p == q) (Set.toList (trans m))
 
 -- | /Parity/ is the type of states in the odd/even example automaton.
 
@@ -60,14 +62,16 @@ data Parity =
 ev :: Auto Char Parity
 ev =
   MkAuto {
+    states  = Set.fromList [Odd, Even],
+    alphabet = Set.fromList ['0', '1'],
     start = Even,
-    trans = [
+    trans = Set.fromList [
         (Even, S '1', Odd),
         (Even, S '0', Even),
         (Odd, S '0', Odd),
         (Odd, S '1', Even)
       ],
-    final = [Even]
+    final = Set.fromList [Even]
   }
 
 -- | /zzo/ is an automaton recognising the language of binary strings 
@@ -76,17 +80,19 @@ ev =
 zzo :: Auto Char Int
 zzo =
   MkAuto {
+    states  = Set.fromList [0, 1, 2, 3],
+    alphabet = Set.fromList ['0', '1'],
     start = 0,
-    trans = [
-      (0, S '0', 0),
-      (0, S '1', 0),
-      (0, S '0', 1),
-      (1, S '0', 2),
-      (2, S '1', 3),
-      (3, S '0', 3),
-      (3, S '1', 3)
-    ],
-    final = [3]
+    trans = Set.fromList [
+        (0, S '0', 0),
+        (0, S '1', 0),
+        (0, S '0', 1),
+        (1, S '0', 2),
+        (2, S '1', 3),
+        (3, S '0', 3),
+        (3, S '1', 3)
+      ],
+    final = Set.fromList [3]
   }
 
 
@@ -106,12 +112,14 @@ instance Show EvzzoState where
 evzzo :: Auto Char EvzzoState
 evzzo =
   MkAuto {
+    states = Set.fromList ([Ev p | p <- Set.toList (states ev)]++[Zzo n | n <- Set.toList (states zzo)]++[Init]),
+    alphabet = Set.fromList ['0', '1'],
     start = Init,
-    trans =
-      [(Init, E, Ev Even), (Init, E, Zzo 0)]
-        ++ map (\(p,a,q) -> (Ev p,a,Ev q)) (trans ev)
-        ++ map (\(p,a,q) -> (Zzo p,a,Zzo q)) (trans zzo),
-    final = map Ev (final ev) ++ map Zzo (final zzo)
+    trans = 
+      Set.fromList ([(Init, E, Ev Even), (Init, E, Zzo 0)]
+        ++ map (\(p,a,q) -> (Ev p,a,Ev q)) (Set.toList (trans ev))
+        ++ map (\(p,a,q) -> (Zzo p,a,Zzo q)) (Set.toList (trans zzo))),
+    final = Set.fromList (map Ev (Set.toList (final ev)) ++ map Zzo (Set.toList (final zzo)))
   }
 
 -- | Given an automaton /m/, /autoTrSys m/ is the associated transition system,

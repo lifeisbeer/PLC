@@ -58,8 +58,8 @@ autoToDot m =
     txt = Just . Text.pack . show
     mkEdge (p,S a,q) = DotEdge (txt p) (txt q) [toLabel (show a)]
     mkEdge (p,E  ,q) = DotEdge (txt p) (txt q) []
-    edges = map mkEdge (trans m)
-    nodes = map (\q -> DotNode (txt q) [shape DoubleCircle]) (final m)
+    edges = map mkEdge (Set.toList (trans m))
+    nodes = map (\q -> DotNode (txt q) [shape DoubleCircle]) (Set.toList (final m))
 
 vizAuto :: (Show a, Show q) => Auto a q -> FilePath -> IO FilePath
 vizAuto a = runGraphviz (autoToDot a) Png

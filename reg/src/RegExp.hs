@@ -142,9 +142,11 @@ compileSym c n = (n+2, m)
   where
     m =
       MkAuto {
+        states  = Set.empty,
+        alphabet = Set.empty,
         start = n,
-        trans = [(n, S c, n+1)],
-        final = [n+1]
+        trans = Set.fromList [(n, S c, n+1)],
+        final = Set.fromList [n+1]
       }
 
 compileEps :: Int -> (Int, Auto Char Int)
@@ -152,9 +154,11 @@ compileEps n = (n+2, m)
   where
     m =
       MkAuto {
+        states  = Set.empty,
+        alphabet = Set.empty,
         start = n,
-        trans = [(n, E, n+1)],
-        final = [n+1]
+        trans = Set.fromList [(n, E, n+1)],
+        final = Set.fromList [n+1]
       }
 
 -- | Given regular expressions /e1/ and /e2/ and a number /n/,
@@ -171,8 +175,8 @@ compileAlt e1 e2 n0 = (n2+3, m)
     -- The compile function guarantees
     -- that the NFAs produced have exactly
     -- one final state.
-    [f1] = final m1
-    [f2] = final m2
+    [f1] = (Set.toList (final m1))
+    [f2] = (Set.toList (final m2))
     -- To create an NFA that recognises
     -- /Alt e1 e2/ we "create" a new start
     -- state using the next available number,
@@ -198,9 +202,11 @@ compileAlt e1 e2 n0 = (n2+3, m)
     -- it has the epsilon transitions from /newTrans/.
     m =
       MkAuto {
+        states  = Set.empty,
+        alphabet = Set.empty,
         start = n2+1,
-        trans = newTrans ++ trans m1 ++ trans m2,
-        final = [n2+2]
+        trans = Set.fromList (newTrans ++ (Set.toList (trans m1)) ++ (Set.toList (trans m2))),
+        final = Set.fromList [n2+2]
       }
 
 compileCat :: RegExp -> RegExp -> Int -> (Int, Auto Char Int)
@@ -208,11 +214,13 @@ compileCat e1 e2 n0 = (n2, m)
   where
     (n1,m1) = compile e1 n0
     (n2,m2) = compile e2 n1
-    [f1] = final m1
+    [f1] = (Set.toList (final m1))
     m =
       MkAuto {
+        states  = Set.empty,
+        alphabet = Set.empty,
         start = start m1,
-        trans = (f1, E, start m2) : (trans m1 ++ trans m2),
+        trans = Set.fromList ((f1, E, start m2) : ((Set.toList (trans m1)) ++ (Set.toList (trans m2)))),
         final = final m2
       }
 
@@ -220,7 +228,7 @@ compileStar :: RegExp -> Int -> (Int, Auto Char Int)
 compileStar e1 n0 = (n1+2, m)
   where
     (n1, m1) = compile e1 n0
-    [f1] = final m1
+    [f1] = (Set.toList (final m1))
     newTrans = [
         (start m1, E, n1+1),
         (f1, E, n1+1),
@@ -228,9 +236,11 @@ compileStar e1 n0 = (n1+2, m)
       ]
     m =
       MkAuto {
+        states  = Set.empty,
+        alphabet = Set.empty,
         start = start m1,
-        trans = newTrans ++ trans m1,
-        final = [n1+1]
+        trans = Set.fromList (newTrans ++ (Set.toList (trans m1))),
+        final = Set.fromList [n1+1]
       }
 
 -- | Given a regular expression /rex/ and a string /s/

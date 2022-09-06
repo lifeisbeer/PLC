@@ -12,7 +12,7 @@ extra-source-files:
 
 library
 
-  exposed-modules:  TrSys, Automata, RegExp, NonDet, Vis
+  exposed-modules:  TrSys, DetAut, Automata, RegExp, NonDet, RegLan, Vis
   other-extensions: OverloadedStrings
   build-depends:    base         >=4.14.0.0 && < 4.16.0.0,
                     containers   >= 0.6.4 && < 0.7,
@@ -29,8 +29,10 @@ test-suite test
   hs-source-dirs:   test
   main-is:          Test.hs
   other-modules:    TrSysTests 
+                    DetAutTests
                     RegExpTests 
                     AutomataTests
+                    RegLanTests
   build-depends:    base >=4.14.0.0 && < 4.16.0.0, 
                     tasty ^>= 1.4, 
                     tasty-hunit ^>= 0.10.0.3, 
